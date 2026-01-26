@@ -30,20 +30,34 @@ router.get('/logout', ensureAuthenticated,(req, res, next) => {
 });
 
 // Admin
-router.get('/admin', ensureAuthenticated, (req,res,next) => {
-    Complaint.getAllComplaints((err, complaints) => {
-        if (err) throw err;
-    
-        User.getResolver((err, resolver) => {
-            if (err) throw err;
+router.get('/admin', ensureAuthenticated, async (req, res) => {
+    try {
+        const complaints = await Complaint.find().populate('user');
 
-            res.render('admin/admin', {
-                complaints : complaints,
-                resolver : resolver,
-            });
+        const groupedComplaints = {};
+
+        complaints.forEach(c => {
+            const dept = c.user?.department || 'Unknown';
+
+            if (!groupedComplaints[dept]) {
+                groupedComplaints[dept] = [];
+            }
+            groupedComplaints[dept].push(c);
         });
-    });        
+
+        const resolver = await User.getResolver();
+
+        res.render('admin/admin', {
+            groupedComplaints,
+            resolver
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.redirect('/');
+    }
 });
+
 
 
 // Assign the Complaint to Resolver
@@ -129,19 +143,28 @@ router.get('/complaint', ensureAuthenticated, (req, res, next) => {
     });
 });
 
-//Register a Complaint
-router.post('/registerComplaint', (req, res, next) => {
+// Student - View My Complaints
+router.get('/my-complaints', ensureAuthenticated, async (req, res) => {
+    try {
+        const complaints = await Complaint.find({ user: req.user._id });
+        res.render('mycomplaints', {
+            complaints: complaints
+        });
+    } catch (err) {
+        console.error(err);
+        res.redirect('/');
+    }
+});
 
-    console.log(req.body); // DEBUG (keep for now)
-
+// Register a Complaint
+router.post('/registerComplaint', ensureAuthenticated, (req, res) => {
     const title = req.body.title;
     const description = req.body.description;
 
     req.checkBody('title', 'Title is required').notEmpty();
     req.checkBody('description', 'Description is required').notEmpty();
 
-    let errors = req.validationErrors();
-
+    const errors = req.validationErrors();
     if (errors) {
         return res.render('complaint', { errors });
     }
@@ -149,21 +172,19 @@ router.post('/registerComplaint', (req, res, next) => {
     const newComplaint = new Complaint({
         title: title,
         description: description,
-        status: "Pending"
+        status: 'Pending',
+        user: req.user._id
     });
 
-    //  IMPORTANT: save directly
     newComplaint.save((err) => {
         if (err) {
-            console.log(err);
-            return;
+            console.error(err);
+            return res.redirect('/');
         }
         req.flash('success_msg', 'Complaint registered successfully');
         res.redirect('/');
     });
 });
-
-
 
 
 // Process Register

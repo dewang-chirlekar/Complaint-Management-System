@@ -1,0 +1,13 @@
+<h2>My Complaints</h2>
+
+{{#if complaints.length}}
+  {{#each complaints}}
+    <div class="card" style="margin-bottom: 15px; padding: 10px;">
+      <p><strong>Title:</strong> {{this.title}}</p>
+      <p><strong>Description:</strong> {{this.description}}</p>
+      <p><strong>Status:</strong> {{this.status}}</p>
+    </div>
+  {{/each}}
+{{else}}
+  <p>No complaints raised yet.</p>
+{{/if}}

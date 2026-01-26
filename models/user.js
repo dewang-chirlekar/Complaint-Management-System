@@ -65,4 +65,3 @@ module.exports.getResolver = function(callback){
     const query = {role: "resolver"}
     User.find(query, callback);
 }
-//hell

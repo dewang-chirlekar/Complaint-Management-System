@@ -12,46 +12,63 @@
     </tr>
   </thead>
   <tbody>
-    {{#each complaints}}
-<tr>
-    <td>{{_id}}</td>
+{{#each groupedComplaints}}
+  <h3>{{@key}} Department</h3>
 
-    <td>
-        {{title}}
-        <br><br>
-        <button 
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {{#each this}}
+      <tr>
+        <td>{{this._id}}</td>
+
+        <td>
+          {{this.title}}
+          <br><br>
+          <button 
             class="btn btn-sm btn-primary"
             type="button"
-            onclick="toggleDesc('{{_id}}', this)">
+            onclick="toggleDesc('{{this._id}}')">
             View Description
-        </button>
-    </td>
+          </button>
+        </td>
 
-    <td>
-    <form method="post" action="/updateStatus" style="display:flex; gap:6px;">
-        <input type="hidden" name="complaintID" value="{{_id}}">
+        <td>
+          <form method="post" action="/updateStatus" style="display:flex; gap:6px;">
+            <input type="hidden" name="complaintID" value="{{this._id}}">
 
-        <select name="status" class="form-control form-control-sm">
-            <option value="Pending" {{#ifEquals status "Pending"}}selected{{/ifEquals}}>Pending</option>
-            <option value="In Progress" {{#ifEquals status "In Progress"}}selected{{/ifEquals}}>In Progress</option>
-            <option value="Resolved" {{#ifEquals status "Resolved"}}selected{{/ifEquals}}>Resolved</option>
-        </select>
+            <select name="status" class="form-control form-control-sm">
+              <option value="Pending" {{#ifEquals this.status "Pending"}}selected{{/ifEquals}}>Pending</option>
+              <option value="In Progress" {{#ifEquals this.status "In Progress"}}selected{{/ifEquals}}>In Progress</option>
+              <option value="Resolved" {{#ifEquals this.status "Resolved"}}selected{{/ifEquals}}>Resolved</option>
+            </select>
 
-        <button type="submit" class="btn btn-sm btn-success">
-            Update
-        </button>
-    </form>
-</td>
+            <button type="submit" class="btn btn-sm btn-success">
+              Update
+            </button>
+          </form>
+        </td>
+      </tr>
 
-</tr>
-
-<tr id="desc-row-{{_id}}" style="display:none;">
-    <td colspan="3">
-        <strong>Description:</strong>
-        <p style="margin-top:8px;">{{description}}</p>
-    </td>
-</tr>
+      <tr id="desc-row-{{this._id}}" style="display:none;">
+        <td colspan="3">
+          <strong>Description:</strong>
+          <p>{{this.description}}</p>
+        </td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
 {{/each}}
+
+
 
     
   </tbody>
