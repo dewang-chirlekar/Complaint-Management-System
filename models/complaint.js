@@ -6,6 +6,11 @@ dbconnect()
 
 // Complaint Schema
 const ComplaintSchema = mongoose.Schema({
+    complaintNo: {
+        type: Number,
+        unique: true
+    },
+
     title: {
         type: String
     },

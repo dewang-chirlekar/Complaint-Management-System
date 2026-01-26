@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const Counter = require('../models/counter');
+
 
 let User = require('../models/user');
 let Complaint = require('../models/complaint');
@@ -89,12 +91,7 @@ router.post('/assign', (req,res,next) => {
 
 });
 
-router.post('/assign', (req, res, next) => {
-    // assign logic
-});   // 👈 ends here (line ~76)
 
-
-// ✅ ADD BELOW THIS LINE (around 77)
 
 // Update Complaint Status (Admin & Resolver)
 router.post('/updateStatus', ensureAuthenticated, (req, res) => {
@@ -156,10 +153,10 @@ router.get('/my-complaints', ensureAuthenticated, async (req, res) => {
     }
 });
 
+
 // Register a Complaint
-router.post('/registerComplaint', ensureAuthenticated, (req, res) => {
-    const title = req.body.title;
-    const description = req.body.description;
+router.post('/registerComplaint', ensureAuthenticated, async (req, res) => {
+    const { title, description } = req.body;
 
     req.checkBody('title', 'Title is required').notEmpty();
     req.checkBody('description', 'Description is required').notEmpty();
@@ -169,22 +166,27 @@ router.post('/registerComplaint', ensureAuthenticated, (req, res) => {
         return res.render('complaint', { errors });
     }
 
+    // 🔢 get next complaint number
+    const counter = await Counter.findOneAndUpdate(
+        { name: 'complaintNo' },
+        { $inc: { value: 1 } },
+        { new: true, upsert: true }
+    );
+
     const newComplaint = new Complaint({
-        title: title,
-        description: description,
+        complaintNo: counter.value,
+        title,
+        description,
         status: 'Pending',
         user: req.user._id
     });
 
-    newComplaint.save((err) => {
-        if (err) {
-            console.error(err);
-            return res.redirect('/');
-        }
-        req.flash('success_msg', 'Complaint registered successfully');
-        res.redirect('/');
-    });
+    await newComplaint.save();
+
+    req.flash('success_msg', 'Complaint registered successfully');
+    res.redirect('/');
 });
+
 
 
 // Process Register
