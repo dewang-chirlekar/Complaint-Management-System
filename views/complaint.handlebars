@@ -1,0 +1,34 @@
+<form method="post" action="/registerComplaint">
+
+    <h2>Register a Complaint</h2>
+    <div class="form-group">
+    <label>Title</label>
+    <input 
+        class="form-control" 
+        type="text" 
+        name="title" 
+        placeholder="Enter complaint title"
+        required
+    >
+</div>
+
+<div class="form-group">
+    <label>Description</label>
+    <textarea 
+        class="form-control" 
+        name="description" 
+        cols="30" 
+        rows="6" 
+        placeholder="Describe your complaint"
+        required
+    ></textarea>
+</div>
+
+    <button class="btn btn-success" type="submit">Submit Complaint</button>
+    <br>
+    <br>
+    Wanna change your mind? <a class="btn btn-warning btn-sm" href="/">Back</a>
+    <br>
+    <br>
+
+</form>
