@@ -9,9 +9,16 @@ let User = require('../models/user');
 let Complaint = require('../models/complaint');
 let ComplaintMapping = require('../models/complaint-mapping');
 
-// Home Page - Dashboard
-router.get('/', ensureAuthenticated, (req, res, next) => {
-    res.render('index');
+// Home Page - Student Dashboard ONLY
+router.get('/', ensureAuthenticated, (req, res) => {
+
+    if (req.user.role !== 'student') {
+        return res.redirect(
+            req.user.role === 'admin' ? '/admin' : '/resolver'
+        );
+    }
+
+    res.render('index'); // student dashboard
 });
 
 // Login Form
@@ -120,16 +127,33 @@ router.post('/updateStatus', ensureAuthenticated, (req, res) => {
 });
 
 
-// Resolver route
-router.get('/resolver', ensureAuthenticated, (req, res) => {
-    res.render('resolver/resolver');
+// Resolver Dashboard
+router.get('/resolver', ensureAuthenticated, async (req, res) => {
+    try {
+        // find mappings for this resolver
+        const mappings = await ComplaintMapping.find({
+            resolverName: req.user.username
+        });
+
+        // extract complaint IDs
+        const complaintIds = mappings.map(m => m.complaintID);
+
+        // fetch assigned complaints
+        const complaints = await Complaint.find({
+            _id: { $in: complaintIds }
+        });
+
+        res.render('resolver/resolver', {
+            complaints
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.redirect('/');
+    }
 });
 
 
-// Junior Eng
-router.get('/jeng', ensureAuthenticated, (req,res,next) => {
-    res.render('junior/junior');
-});
 
 //Complaint
 router.get('/complaint', ensureAuthenticated, (req, res, next) => {
@@ -142,10 +166,17 @@ router.get('/complaint', ensureAuthenticated, (req, res, next) => {
 
 // Student - View My Complaints
 router.get('/my-complaints', ensureAuthenticated, async (req, res) => {
+
+    // 🔐 role protection
+    if (req.user.role !== 'student') {
+        req.flash('error_msg', 'Unauthorized access');
+        return res.redirect('/');
+    }
+
     try {
         const complaints = await Complaint.find({ user: req.user._id });
         res.render('mycomplaints', {
-            complaints: complaints
+            complaints
         });
     } catch (err) {
         console.error(err);
@@ -292,8 +323,8 @@ router.post('/login', passport.authenticate('local',
         if(req.user.role==='admin'){
             res.redirect('/admin');
         }
-        else if(req.user.role==='jeng'){
-            res.redirect('/jeng');
+        else if(req.user.role==='resolver'){
+            res.redirect('/resolver');
         }
         else{
             res.redirect('/');
@@ -312,3 +343,5 @@ function ensureAuthenticated(req, res, next) {
 }
 
 module.exports = router;
+
+

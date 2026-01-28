@@ -77,23 +77,22 @@
 <div class="container mt-5 border p-5" style="width:70%">
     <h2> Assign the Complaint to Resolver</h2>
     <br>
-    <form method="post" action="/assign">
-    <div class="form-group">
-        <label>Complaint Number</label>
-        <input class="form-control" type="text" name="complaintID" placeholder="Complaint Number">
-    </div>
-    <div class="form-group">
-        <label>Resolver</label>
-        <select name="resolverName" id="resolverName" class="form-control">
-            {{#each resolver}}
-                <option value={{username}}> {{username}} </option>
-            {{/each}}
-        </select>
-    </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-success btn-block">Assign to Resolver</button>
-    </div>
-    </form>
+    <form method="post" action="/assign" style="margin-top:5px;">
+    <input type="hidden" name="complaintID" value="{{this._id}}">
+
+    <select name="resolverName" class="form-control form-control-sm">
+        {{#each ../resolver}}
+            <option value="{{this.username}}">
+                {{this.username}}
+            </option>
+        {{/each}}
+    </select>
+
+    <button type="submit" class="btn btn-sm btn-warning" style="margin-top:5px;">
+        Assign
+    </button>
+</form>
+
 </div>
 
 <script>

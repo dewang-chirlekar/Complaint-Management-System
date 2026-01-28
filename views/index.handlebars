@@ -1,3 +1,8 @@
+{{#ifEquals user.role "resolver"}}
+  <script>window.location.href = "/resolver";</script>
+{{/ifEquals}}
+
+
 <h2>Welcome to Complaint Management System</h2>
 <br>
 <h3>Hello {{user.name}} !!!</h3>

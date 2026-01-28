@@ -1,0 +1,30 @@
+<h2>Assigned Complaints</h2>
+
+{{#if complaints.length}}
+  {{#each complaints}}
+    <div class="card" style="padding:12px; margin-bottom:12px;">
+      <p><strong>Complaint No:</strong> {{this.complaintNo}}</p>
+      <p><strong>Title:</strong> {{this.title}}</p>
+      <p><strong>Description:</strong> {{this.description}}</p>
+      <p>
+        <strong>Status:</strong>
+        <span>{{this.status}}</span>
+      </p>
+
+      <form method="post" action="/updateStatus" style="margin-top:8px;">
+        <input type="hidden" name="complaintID" value="{{this._id}}">
+
+        <select name="status" class="form-control">
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+        </select>
+
+        <button type="submit" class="btn btn-success" style="margin-top:6px;">
+          Update Status
+        </button>
+      </form>
+    </div>
+  {{/each}}
+{{else}}
+  <p>No complaints assigned to you.</p>
+{{/if}}
