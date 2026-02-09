@@ -40,63 +40,66 @@ router.get('/logout', ensureAuthenticated,(req, res, next) => {
 
 // Admin
 router.get('/admin', ensureAuthenticated, async (req, res) => {
-    try {
-        const complaints = await Complaint.find().populate('user');
+  try {
+    const complaints = await Complaint.find()
+    .populate('user')
+    .populate('assignedTo');
 
-        const groupedComplaints = {};
+    const groupedComplaints = {};
+    complaints.forEach(c => {
+      const dept = c.user?.department || 'Unknown';
+      if (!groupedComplaints[dept]) groupedComplaints[dept] = [];
+      groupedComplaints[dept].push(c);
+    });
 
-        complaints.forEach(c => {
-            const dept = c.user?.department || 'Unknown';
+    // ✅ THIS is critical
+    const resolver = await User.find({ role: 'resolver' });
 
-            if (!groupedComplaints[dept]) {
-                groupedComplaints[dept] = [];
-            }
-            groupedComplaints[dept].push(c);
-        });
+    console.log("Resolvers:", resolver); // 👈 DEBUG (you said this prints in terminal)
 
-        const resolver = await User.getResolver();
+    res.render('admin/admin', {
+      groupedComplaints,
+      resolver
+    });
 
-        res.render('admin/admin', {
-            groupedComplaints,
-            resolver
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.redirect('/');
-    }
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
 });
 
 
 
-// Assign the Complaint to Resolver
-router.post('/assign', (req,res,next) => {
-    const complaintID = req.body.complaintID;
-    const resolverName = req.body.resolverName;
 
-    req.checkBody('complaintID', 'Contact field is required').notEmpty();
-    req.checkBody('resolverName', 'Description field is required').notEmpty();
 
-    let errors = req.validationErrors();
+// Assign complaint to resolver
+router.post('/assignResolver', ensureAuthenticated, async (req, res) => {
+  try {
+    const { complaintID, resolverId } = req.body;
 
-    if (errors) {
-        res.render('admin/admin', {
-            errors: errors
-        });
-    } else {
-        const newComplaintMapping = new ComplaintMapping({
-            complaintID: complaintID,
-            resolverName: resolverName,
-        });
+    console.log("Assigning complaint:", complaintID);
+    console.log("To resolver:", resolverId);
 
-        ComplaintMapping.registerMapping(newComplaintMapping, (err, complaint) => {
-            if (err) throw err;
-            req.flash('success_msg', 'You have successfully assigned a complaint to Resolver');
-            res.redirect('/admin');
-        });
+    if (!complaintID || !resolverId) {
+      req.flash('error_msg', 'Please select a resolver');
+      return res.redirect('/admin');
     }
 
+    await Complaint.findByIdAndUpdate(complaintID, {
+      assignedTo: resolverId
+    });
+
+    req.flash('success_msg', 'Complaint assigned successfully');
+    res.redirect('/admin');
+
+  } catch (err) {
+    console.error("Assign error:", err);
+    res.redirect('/admin');
+  }
 });
+
+
+
 
 
 
@@ -127,31 +130,26 @@ router.post('/updateStatus', ensureAuthenticated, (req, res) => {
 });
 
 
-// Resolver Dashboard
+// Resolver dashboard
 router.get('/resolver', ensureAuthenticated, async (req, res) => {
-    try {
-        // find mappings for this resolver
-        const mappings = await ComplaintMapping.find({
-            resolverName: req.user.username
-        });
-
-        // extract complaint IDs
-        const complaintIds = mappings.map(m => m.complaintID);
-
-        // fetch assigned complaints
-        const complaints = await Complaint.find({
-            _id: { $in: complaintIds }
-        });
-
-        res.render('resolver/resolver', {
-            complaints
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.redirect('/');
+  try {
+    if (req.user.role !== 'resolver') {
+      req.flash('error_msg', 'Unauthorized');
+      return res.redirect('/');
     }
+
+    const complaints = await Complaint.find({ assignedTo: req.user._id });
+
+    res.render('resolver/resolver', {
+      complaints
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
 });
+
 
 
 

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
-const dbconnect = require('../db')
+const dbconnect = require('../db');
+const { assign } = require('express-handlebars/lib/utils');
 
 //Call the db to connect the mongo db
 dbconnect()
@@ -24,6 +25,11 @@ const ComplaintSchema = mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
+    },
+    assignedTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
     }
 });
 

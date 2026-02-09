@@ -1,22 +1,10 @@
 <h3>Hello {{user.name}} !!!</h3>
 
-<br>
-<br>
-
-<table class="table table-bordered">
-  <thead class="table-success">
-    <tr>
-        <th scope="col">ID</th>
-        <th scope="col">Title</th>
-        <th scope="col">Status</th>
-    </tr>
-  </thead>
-  <tbody>
 {{#each groupedComplaints}}
   <h3>{{@key}} Department</h3>
 
   <table class="table table-bordered">
-    <thead>
+    <thead class="table-success">
       <tr>
         <th>ID</th>
         <th>Title</th>
@@ -32,12 +20,35 @@
         <td>
           {{this.title}}
           <br><br>
-          <button 
+
+          <button
             class="btn btn-sm btn-primary"
             type="button"
-            onclick="toggleDesc('{{this._id}}')">
+            onclick="toggleDesc('{{this._id}}', this)">
             View Description
           </button>
+
+          <form method="post" action="/assignResolver" style="display:flex; gap:6px; margin-top:6px;">
+            <input type="hidden" name="complaintID" value="{{this._id}}">
+
+            <select name="resolverId" class="form-control form-control-sm">
+  <          option value="">Assign Resolver</option>
+            {{#each ../../resolver}}
+            <option value="{{_id}}">{{name}}</option>
+            {{/each}}
+            </select>
+
+
+            <button type="submit" class="btn btn-sm btn-warning">
+              Assign
+            </button>
+          </form>
+
+          {{#if this.assignedTo}}
+            <small>Assigned to: {{this.assignedTo.name}}</small>
+          {{else}}
+            <small>Not assigned</small>
+          {{/if}}
         </td>
 
         <td>
@@ -68,49 +79,25 @@
   </table>
 {{/each}}
 
-
-
-    
-  </tbody>
-</table>
-
-<div class="container mt-5 border p-5" style="width:70%">
-    <h2> Assign the Complaint to Resolver</h2>
-    <br>
-    <form method="post" action="/assign" style="margin-top:5px;">
-    <input type="hidden" name="complaintID" value="{{this._id}}">
-
-    <select name="resolverName" class="form-control form-control-sm">
-        {{#each ../resolver}}
-            <option value="{{this.username}}">
-                {{this.username}}
-            </option>
-        {{/each}}
-    </select>
-
-    <button type="submit" class="btn btn-sm btn-warning" style="margin-top:5px;">
-        Assign
-    </button>
-</form>
-
-</div>
-
 <script>
 function toggleDesc(id, btn) {
-    const row = document.getElementById("desc-row-" + id);
+  const row = document.getElementById("desc-row-" + id);
 
-    if (row.style.display === "none") {
-        row.style.display = "table-row";
-        btn.innerText = "Hide Description";
-        btn.classList.remove("btn-primary");
-        btn.classList.add("btn-secondary");
-    } else {
-        row.style.display = "none";
-        btn.innerText = "View Description";
-        btn.classList.remove("btn-secondary");
-        btn.classList.add("btn-primary");
-    }
+  if (!row) {
+    console.log("Description row not found for:", id);
+    return;
+  }
+
+  if (row.style.display === "none") {
+    row.style.display = "table-row";
+    btn.innerText = "Hide Description";
+    btn.classList.remove("btn-primary");
+    btn.classList.add("btn-secondary");
+  } else {
+    row.style.display = "none";
+    btn.innerText = "View Description";
+    btn.classList.remove("btn-secondary");
+    btn.classList.add("btn-primary");
+  }
 }
 </script>
-
-
