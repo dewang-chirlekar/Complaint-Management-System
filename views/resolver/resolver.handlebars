@@ -13,7 +13,24 @@
       <tr>
         <td>{{complaintNo}}</td>
         <td>{{title}}</td>
-        <td>{{status}}</td>
+        <td>
+          <form method="post" action="/updateStatus" style="display:flex; gap:6px;">
+            <input type="hidden" name="complaintID" value="{{_id}}">
+
+            <select name="status" class="form-control form-control-sm">
+              <option value="In Progress" {{#ifEquals status "In Progress"}}selected{{/ifEquals}}>
+                In Progress
+              </option>
+              <option value="Resolved" {{#ifEquals status "Resolved"}}selected{{/ifEquals}}>
+                Resolved
+              </option>
+            </select>
+
+            <button type="submit" class="btn btn-sm btn-success">
+              Update
+            </button>
+          </form>
+        </td>
       </tr>
     {{else}}
       <tr>
